@@ -1,0 +1,16 @@
+node_modules/
+dist/
+out/
+release/
+*.log
+
+# Windows / OneDrive
+Thumbs.db
+desktop.ini
+~$*
+
+# Firma — nunca versionar credenciales
+*.pfx
+*.p12
+.env
+.env.local
