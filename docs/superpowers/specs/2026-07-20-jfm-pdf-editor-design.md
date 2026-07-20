@@ -26,6 +26,7 @@ Licencia AGPL-3.0-only. La distribución pública de una versión modificada obl
 ## No objetivos
 
 - **Impresora virtual "Imprimir a PDF".** Windows 10 y 11 ya incluyen "Microsoft Print to PDF". Duplicarlo exigiría un driver v4 con firma WHQL — el componente más caro del proyecto para replicar algo que el sistema ya regala.
+- **Microsoft Store en los hitos 1 y 2.** Es un canal adicional planificado como hito 3; no condiciona el diseño de los dos primeros.
 - **Paridad con ABBYY FineReader en reconstrucción de tablas.** Requiere un modelo de análisis de layout, que es otra tecnología. Se reevalúa con usuarios reales.
 - macOS y Linux.
 - Landing page en jfmtechnology.com — proyecto separado.
@@ -236,6 +237,32 @@ Resultado: descargable desde la landing y ya sustituye a Acrobat para la mayorí
 `IExplorerCommand`, `IThumbnailProvider`, sparse MSIX, sidecar de Tesseract con `tessdata_best` y preprocesamiento con vips.
 
 El orden importa: los componentes COM son la parte más propensa a atascarse. Publicar el hito 1 primero evita que el proyecto entero quede sin salir por un handler de miniaturas.
+
+### Hito 3 — Microsoft Store
+
+Segundo canal de distribución, sobre el mismo código base.
+
+**Términos de licencia personalizados (obligatorio).** Los términos estándar de la Store imponen restricciones al usuario incompatibles con la familia GPL, y la AGPL prohíbe añadir restricciones. La Store permite publicar términos propios; ahí va la AGPL. Publicar con los términos por defecto incumpliría la licencia de BentoPDF — y JFM es distribuidor downstream, no titular del copyright. Precedente: VLC, Krita e Inkscape.
+
+**Empaquetado.** Target `appx`/`msix` de electron-builder. La aplicación va como Win32 en full trust (`runFullTrust`), no como UWP en AppContainer, lo que preserva el acceso al sistema de archivos y el guardado in situ.
+
+**Dos variantes de build sobre el mismo código:**
+
+| | Descarga directa | Microsoft Store |
+|---|---|---|
+| Formato | NSIS | MSIX |
+| Firma | Azure Trusted Signing | Microsoft |
+| Actualización | `electron-updater` | Store |
+
+`electron-updater` debe quedar desactivado en la variante Store.
+
+**Riesgo a verificar temprano:** el servidor HTTP en loopback. Las restricciones de loopback de Windows aplican a UWP en AppContainer y no deberían afectar a una app en full trust, pero es el tipo de componente que un revisor de certificación puede marcar. Validar con una submission temprana antes de invertir en la variante completa.
+
+**Sinergia con el hito 2:** al producir ya un MSIX, el *sparse package* que el hito 2 necesitaba para registrar `IExplorerCommand` deja de ser un paquete independiente — se declara dentro del MSIX principal. Esto elimina el mecanismo de actualización paralelo descrito en la sección de Actualizaciones y simplifica la parte más frágil del hito 2.
+
+**Orden:** posterior al hito 1. Los ciclos de certificación de la Store son de días y frenarían la estabilización de la primera versión. Se aborda cuando la app sea estable, unificándolo con el trabajo nativo del hito 2.
+
+**Verificar antes de comprometer calendario:** las políticas de la Store cambian con frecuencia. Confirmar en Partner Center los términos personalizados, las capacidades requeridas y el coste de la cuenta de desarrollador.
 
 ## Cumplimiento AGPL
 
